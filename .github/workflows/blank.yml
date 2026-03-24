@@ -110,7 +110,7 @@ jobs:
       - name: Deploy to CloudHub 2.0 (${{ inputs.environment }}) 
         run: |
           mvn clean deploy -DskipTests -DmuleDeploy \
-          -Dmule.env=Development \
+          -Dmule.env=DEV \
           -Dapp.vCores=${{ inputs.vCore }} \
           -Dapp.replicas=${{ inputs.replicas }} \
           -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
