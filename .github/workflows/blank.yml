@@ -16,7 +16,7 @@ on:
         type: string
       branch:
         required: true
-        default: dev
+        default: develop
         type: string
       environment:
         required: true
