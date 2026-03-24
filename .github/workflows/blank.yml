@@ -1,5 +1,10 @@
 name: Build and Deploy
 
+env:
+  GLOBAL_CONNECTED_APP_CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+  GLOBAL_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
+  GLOBAL_PAT: ${{ secrets.PAT }}
+
 on:
   workflow_dispatch:
     inputs:
@@ -10,6 +15,10 @@ on:
         required: true
         default: develop
         type: string
+      environment:
+        required: true
+        type: choice
+        options: [DEV]
 
 jobs:
   Build-Deploy:
@@ -22,7 +31,7 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/${{ inputs.repository }}
           ref: ${{ inputs.branch }}
-          token: ${{ secrets.PAT }}
+          token: ${{ env.GLOBAL_PAT }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -40,13 +49,8 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: Deploy
-        env:
-          CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
         run: |
-          echo "Client ID length: ${#CLIENT_ID}"
-          mvn deploy -DmuleDeploy \
+          mvn deploy -DmuleDeploy -DskipTests \
           -Dmule.env=Development \
-          -DconnectedAppClientId=$CLIENT_ID \
-          -DconnectedAppClientSecret=$CLIENT_SECRET \
-          -DconnectedAppGrantType=client_credentials
+          -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
+          -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
