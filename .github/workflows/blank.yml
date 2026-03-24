@@ -1,56 +1,117 @@
 name: Build and Deploy
 
 env:
+  GLOBAL_CONNECTED_APP_STRING: ${{ secrets.CONNECTED_APP_STRING }}
   GLOBAL_CONNECTED_APP_CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
   GLOBAL_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
   GLOBAL_PAT: ${{ secrets.PAT }}
+  GLOBAL_ENVIRONMENT: "${{ inputs.environment }}"
 
 on:
   workflow_dispatch:
     inputs:
       repository:
+        description: 'Enter the repository name'
         required: true
         type: string
       branch:
+        description: 'Branch to build'
         required: true
-        default: develop
+        default: 'develop'
         type: string
       environment:
+        description: "Deployment Environment"
         required: true
         type: choice
-        options: [DEV]
+        options:
+          - DEV
+          - TEST
+          - PROD
+      vCore:
+        description: "vCore on Deployment Target"
+        required: true
+        type: choice
+        options:
+          - "0.1"
+          - "0.2"
+          - "0.5"
+          - "1"
+      replicas:
+        description: "Number of Replicas on Deployment Target"
+        required: true
+        type: choice
+        options:
+          - "1"
+          - "2"
+
+run-name: "Deploying ${{ inputs.repository }} to ${{ inputs.environment }}"
 
 jobs:
-  Build-Deploy:
+  Build-Publish-Deploy:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
 
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/${{ inputs.repository }}
-          ref: ${{ inputs.branch }}
-          token: ${{ env.GLOBAL_PAT }}
-
-      - name: Setup Java
+      
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Setup Maven
+      - name: Set up Maven 3.9.9
         uses: s4u/setup-maven-action@v1.12.0
         with:
           java-version: 17
           maven-version: 3.9.9
+          
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: '${{ github.repository_owner }}/${{ inputs.repository }}'
+          ref: '${{ inputs.branch }}'
+          token: "${{ env.GLOBAL_PAT }}"
+          fetch-depth: 0
 
-      - name: Build
-        run: mvn clean package -DskipTests
+      - name: Configure Maven settings
+        uses: s4u/maven-settings-action@v3.1.0
+        with:
+          servers: >
+            [
+              {
+                "id": "anypoint-exchange-v3",
+                "username": "~~~Client~~~",
+                "password": "${{ env.GLOBAL_CONNECTED_APP_STRING }}"
+              }
+            ] 
+          repositories: >
+            [
+              {
+                "id": "anypoint-exchange-v3",
+                "url": "https://maven.anypoint.mulesoft.com/api/v3/maven",
+                "releases": { "enabled": "true" },
+                "snapshots": { "enabled": "true" }
+              },
+              {
+                "id": "MuleRepository",
+                "url": "https://repository.mulesoft.org/nexus-ee/content/repositories/releases-ee/",
+                "releases": { "enabled": "true" },
+                "snapshots": { "enabled": "true" }
+              }
+            ]
 
-      - name: Deploy
+      - name: Publish to Exchange
         run: |
-          mvn deploy -DmuleDeploy -DskipTests \
+          mvn clean deploy -DskipTests \
           -Dmule.env=Development \
+          -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
+          -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
+
+      - name: Deploy to CloudHub 2.0 (${{ inputs.environment }}) 
+        run: |
+          mvn clean deploy -DskipTests -DmuleDeploy \
+          -Dmule.env=Development \
+          -Dapp.vCores=${{ inputs.vCore }} \
+          -Dapp.replicas=${{ inputs.replicas }} \
           -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
           -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
