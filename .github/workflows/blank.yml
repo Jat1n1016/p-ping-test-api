@@ -60,6 +60,5 @@ jobs:
         run: |
           mvn deploy -DmuleDeploy \
           -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }} \
-          -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
-          -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }} \
-          -DconnectedAppGrantType=client_credentials
+          -Danypoint.platform.client_id=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
+          -Danypoint.platform.client_secret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
