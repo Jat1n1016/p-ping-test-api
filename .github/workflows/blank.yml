@@ -6,8 +6,7 @@ env:
   GLOBAL_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
   GLOBAL_PAT: ${{ secrets.PAT }}
   GLOBAL_TARGET: ${{ vars.TARGET }}
-  GLOBAL_ENVIRONMENT: ${{ inputs.environment }}
-  
+  GLOBAL_ENVIRONMENT: Development
 
 on:
   workflow_dispatch:
@@ -19,10 +18,6 @@ on:
         required: true
         default: develop
         type: string
-      environment:
-        required: true
-        type: choice
-        options: [DEV]
       vCore:
         required: true
         type: choice
@@ -35,11 +30,10 @@ on:
 jobs:
   Build-Deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
 
     steps:
 
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/${{ inputs.repository }}
@@ -58,21 +52,14 @@ jobs:
           java-version: 17
           maven-version: 3.9.9
 
-      - name: Build Application
+      - name: Build
         run: |
-          mvn clean package -DskipTests \
-          -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }}
+          mvn clean package -DskipTests
 
-      - name: Deploy to CloudHub
+      - name: Deploy
         run: |
-          mvn deploy \
-          -DmuleDeploy=true \
-          -Dmule.artifact=cloudhub \
-          -DskipTests \
+          mvn deploy -DmuleDeploy \
           -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }} \
-          -Dapp.vCores=${{ inputs.vCore }} \
-          -Dapp.replicas=${{ inputs.replicas }} \
-          -Danypoint.privatespace.name=${{ env.GLOBAL_TARGET }} \
           -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
           -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }} \
           -DconnectedAppGrantType=client_credentials
