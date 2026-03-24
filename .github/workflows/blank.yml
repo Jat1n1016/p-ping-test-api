@@ -66,6 +66,8 @@ jobs:
       - name: Deploy to CloudHub
         run: |
           mvn deploy -DmuleDeploy -DskipTests \
+          -DmuleDeploy=true
+          -Dmule.artifact=cloudhub
           -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }} \
           -Dapp.vCores=${{ inputs.vCore }} \
           -Dapp.replicas=${{ inputs.replicas }} \
