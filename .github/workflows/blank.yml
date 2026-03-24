@@ -7,6 +7,7 @@ env:
   GLOBAL_PAT: ${{ secrets.PAT }}
   GLOBAL_TARGET: ${{ vars.TARGET }}
   GLOBAL_ENVIRONMENT: ${{ inputs.environment }}
+  
 
 on:
   workflow_dispatch:
@@ -71,3 +72,4 @@ jobs:
           -Danypoint.privatespace.name=${{ env.GLOBAL_TARGET }} \
           -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
           -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
+          -DconnectedAppGrantType=client_credentials
