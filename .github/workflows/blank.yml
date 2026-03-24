@@ -37,13 +37,16 @@ jobs:
           maven-version: 3.9.9
 
       - name: Build
-        run: |
-          mvn clean package -DskipTests
+        run: mvn clean package -DskipTests
 
       - name: Deploy
+        env:
+          CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
         run: |
+          echo "Client ID length: ${#CLIENT_ID}"
           mvn deploy -DmuleDeploy \
           -Dmule.env=Development \
-          -DconnectedAppClientId=${{ secrets.CONNECTED_APP_CLIENT_ID }} \
-          -DconnectedAppClientSecret=${{ secrets.CONNECTED_APP_CLIENT_SECRET }} \
+          -DconnectedAppClientId=$CLIENT_ID \
+          -DconnectedAppClientSecret=$CLIENT_SECRET \
           -DconnectedAppGrantType=client_credentials
