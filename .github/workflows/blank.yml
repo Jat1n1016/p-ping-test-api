@@ -1,13 +1,5 @@
 name: Build and Deploy
 
-env:
-  GLOBAL_CONNECTED_APP_STRING: ${{ secrets.CONNECTED_APP_STRING }}
-  GLOBAL_CONNECTED_APP_CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
-  GLOBAL_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
-  GLOBAL_PAT: ${{ secrets.PAT }}
-  GLOBAL_TARGET: ${{ vars.TARGET }}
-  GLOBAL_ENVIRONMENT: Development
-
 on:
   workflow_dispatch:
     inputs:
@@ -18,14 +10,6 @@ on:
         required: true
         default: develop
         type: string
-      vCore:
-        required: true
-        type: choice
-        options: ["0.1","0.2","0.5","1"]
-      replicas:
-        required: true
-        type: choice
-        options: ["1","2"]
 
 jobs:
   Build-Deploy:
@@ -38,7 +22,7 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/${{ inputs.repository }}
           ref: ${{ inputs.branch }}
-          token: ${{ env.GLOBAL_PAT }}
+          token: ${{ secrets.PAT }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -59,6 +43,7 @@ jobs:
       - name: Deploy
         run: |
           mvn deploy -DmuleDeploy \
-          -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }} \
-          -Danypoint.platform.client_id=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
-          -Danypoint.platform.client_secret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
+          -Dmule.env=Development \
+          -DconnectedAppClientId=${{ secrets.CONNECTED_APP_CLIENT_ID }} \
+          -DconnectedAppClientSecret=${{ secrets.CONNECTED_APP_CLIENT_SECRET }} \
+          -DconnectedAppGrantType=client_credentials
