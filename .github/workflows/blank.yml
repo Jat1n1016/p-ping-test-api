@@ -1,0 +1,112 @@
+name: Build and Deploy
+
+env:
+  GLOBAL_CONNECTED_APP_STRING: ${{ secrets.CONNECTED_APP_STRING }}
+  GLOBAL_CONNECTED_APP_CLIENT_ID: ${{ secrets.CONNECTED_APP_CLIENT_ID }}
+  GLOBAL_CONNECTED_APP_CLIENT_SECRET: ${{ secrets.CONNECTED_APP_CLIENT_SECRET }}
+  GLOBAL_PAT: ${{ secrets.PAT }}
+  GLOBAL_TARGET: ${{ vars.TARGET }}
+  GLOBAL_ENVIRONMENT: ${{ inputs.environment }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        required: true
+        type: string
+      branch:
+        required: true
+        default: dev
+        type: string
+      environment:
+        required: true
+        type: choice
+        options: [DEV]
+      vCore:
+        required: true
+        type: choice
+        options: ["0.1","0.2","0.5","1"]
+      replicas:
+        required: true
+        type: choice
+        options: ["1","2"]
+
+run-name: "Deploying ${{ inputs.repository }} to ${{ inputs.environment }}"
+
+jobs:
+  Build-Publish-Deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Maven
+        uses: s4u/setup-maven-action@v1.12.0
+        with:
+          java-version: 17
+          maven-version: 3.9.9
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ inputs.repository }}
+          ref: ${{ inputs.branch }}
+          token: ${{ env.GLOBAL_PAT }}
+
+      - name: Configure Maven settings
+        uses: s4u/maven-settings-action@v3.1.0
+        with:
+          servers: >
+            [
+              {
+                "id": "anypoint-exchange-v3",
+                "username": "~~~Client~~~",
+                "password": "${{ env.GLOBAL_CONNECTED_APP_STRING }}"
+              }
+            ] 
+          repositories: >
+            [
+              {
+                "id": "Exchange-Deployment-Repository",
+                "url": "https://maven.anypoint.mulesoft.com/api/v3/maven"
+              }
+            ]
+
+      - name: Set App Tag
+        run: |
+          MULE_ENV=$(echo '${{ inputs.environment }}' | tr '[:upper:]' '[:lower:]')
+          if [[ "$MULE_ENV" == "dev" ]]; then
+            echo "APP_TAG=-$MULE_ENV" >> $GITHUB_ENV
+          else
+            echo "APP_TAG=" >> $GITHUB_ENV
+          fi
+
+      # ✅ MUnit (fails pipeline if test fails)
+      - name: Run MUnit Tests
+        run: |
+          mvn clean test \
+          -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }}
+
+      # ✅ Build
+      - name: Build Application
+        run: |
+          mvn clean package -DskipTests \
+          -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }}
+
+      # ✅ Deploy to CloudHub
+      - name: Deploy to CloudHub
+        run: |
+          mvn deploy -DmuleDeploy -DskipTests \
+          -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }} \
+          -Dapp.vCores=${{ inputs.vCore }} \
+          -Dapp.replicas=${{ inputs.replicas }} \
+          -Dapp.url.env=${{ env.APP_TAG }} \
+          -Danypoint.privatespace.name=${{ env.GLOBAL_TARGET }} \
+          -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
+          -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
