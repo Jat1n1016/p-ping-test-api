@@ -91,10 +91,10 @@
     </pluginRepositories>
 
     <distributionManagement>
-        <repository>
-            <id>anypoint-exchange-v3</id>
-            <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/YOUR_ORG_ID/maven</url>
-        </repository>
-    </distributionManagement>
+    <repository>
+        <id>anypoint-exchange-v3</id>
+        <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/ce235d46-115c-497c-b0e2-474afd80f5e9/maven</url>
+    </repository>
+</distributionManagement>
 
 </project>
