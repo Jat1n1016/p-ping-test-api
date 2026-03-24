@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="p-ping-test-api-suite.xml" />
+	<munit:test name="p-ping-test-apiFlow-test" doc:id="c746b56c-3a60-4a84-a514-150e84f05237" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="db020675-02e1-4dea-b657-b26c11531cf4" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://ppingtestapiFlowtest/set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://ppingtestapiFlowtest/set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to p-ping-test-apiFlow" doc:id="5cab92ec-5202-4cbf-b55f-653f32af3d59" name="p-ping-test-apiFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="1bfb53d9-a341-4d63-94fb-dc37a8cea965" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import ppingtestapiFlowtest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+</mule>
