@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="063197af-4b10-4f3f-8b67-e5691a11f82d" basePath="/v1" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="p-ping-test-apiFlow" doc:id="3417a497-2db9-4fec-b910-094eb93f09ec" >
+		<http:listener doc:name="Listener" doc:id="002a7b38-ccab-47ef-83f1-77b8e9569a77" config-ref="HTTP_Listener_config" path="/ping"/>
+		<ee:transform doc:name="Transform Message" doc:id="a2a13237-bba1-4edb-9bc9-e008e0994e64" >
+			<ee:message >
+				<ee:set-payload ><![CDATA["STATUS OK"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="52b90c04-b908-4521-ae24-71c67cc0150e" message="#[payload]"/>
+	</flow>
+</mule>
