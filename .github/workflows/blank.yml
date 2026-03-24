@@ -65,13 +65,14 @@ jobs:
 
       - name: Deploy to CloudHub
         run: |
-          mvn deploy -DmuleDeploy -DskipTests \
-          -DmuleDeploy=true
-          -Dmule.artifact=cloudhub
+          mvn deploy \
+          -DmuleDeploy=true \
+          -Dmule.artifact=cloudhub \
+          -DskipTests \
           -Dmule.env=${{ env.GLOBAL_ENVIRONMENT }} \
           -Dapp.vCores=${{ inputs.vCore }} \
           -Dapp.replicas=${{ inputs.replicas }} \
           -Danypoint.privatespace.name=${{ env.GLOBAL_TARGET }} \
           -DconnectedAppClientId=${{ env.GLOBAL_CONNECTED_APP_CLIENT_ID }} \
-          -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }}
+          -DconnectedAppClientSecret=${{ env.GLOBAL_CONNECTED_APP_CLIENT_SECRET }} \
           -DconnectedAppGrantType=client_credentials
