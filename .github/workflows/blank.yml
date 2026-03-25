@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: CI/CD(Deploy) 
 
 env:
   GLOBAL_CONNECTED_APP_STRING: ${{ secrets.CONNECTED_APP_STRING }}
@@ -99,6 +99,16 @@ jobs:
                 "snapshots": { "enabled": "true" }
               }
             ]
+      - name: Build with Maven
+        if: inputs.environment != 'PROD'
+        run: |
+          mvn -B clean package -DskipTests \
+          -D"mule.env"="${{ env.GLOBAL_ENVIRONMENT }}" \
+          -D"environment"="${{ env.GLOBAL_ENVIRONMENT }}" \
+          -D"app.vCores"="${{ inputs.vCore }}" \
+          -D"app.replicas"="${{ inputs.replicas }}" \
+          -D"connectedAppClientId"="${{ env.CONNECTED_APP_CLIENT_ID }}" \
+          -D"connectedAppClientSecret"="${{ env.CONNECTED_APP_CLIENT_SECRET }}" \
 
       - name: Publish to Exchange
         run: |
